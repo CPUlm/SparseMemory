@@ -189,43 +189,6 @@ ram_t *ram_create()
     return ram;
 }
 
-ram_t *ram_from_file(const char *filename)
-{
-    addr_t data_len = 0;
-    word_t *data = read_file(filename, &data_len);
-    if (data == NULL)
-        file_error(filename);
-
-    ram_t *ram = ram_create();
-
-    addr_t base_address = 0;
-    while (base_address < data_len)
-    {
-        ram_page_t *page = get_ram_page(ram, base_address);
-        addr_t words_to_copy = ((data_len - base_address < ram->page_size) ? (data_len - base_address) : ram->page_size);
-        memcpy(page->data, data + base_address, sizeof(word_t) * words_to_copy);
-        base_address += ram->page_size;
-    }
-
-    return ram;
-}
-
-void ram_destroy(ram_t *ram)
-{
-    if (ram == NULL)
-        return;
-
-    for (addr_t i = 0; i < ram->bucket_count; ++i)
-    {
-        // free() is well defined on NULL pointers, so we don't need to check
-        // if ram->buckets[i] is a used page or NULL one.
-        free(ram->buckets[i].data);
-    }
-
-    free(ram->buckets);
-    free(ram);
-}
-
 // Returns the memory's page corresponding to the given addr. This effectively
 // does a hash table lookup internally. However, this also adds the memory's
 // page if it was not already present (and therefore may resize the hash table).
@@ -273,6 +236,43 @@ static ram_page_t *get_ram_page(ram_t *ram, addr_t addr)
     ram->page_count += 1;
 
     return &ram->buckets[index];
+}
+
+ram_t *ram_from_file(const char *filename)
+{
+    addr_t data_len = 0;
+    word_t *data = read_file(filename, &data_len);
+    if (data == NULL)
+        file_error(filename);
+
+    ram_t *ram = ram_create();
+
+    addr_t base_address = 0;
+    while (base_address < data_len)
+    {
+        ram_page_t *page = get_ram_page(ram, base_address);
+        addr_t words_to_copy = ((data_len - base_address < ram->page_size) ? (data_len - base_address) : ram->page_size);
+        memcpy(page->data, data + base_address, sizeof(word_t) * words_to_copy);
+        base_address += ram->page_size;
+    }
+
+    return ram;
+}
+
+void ram_destroy(ram_t *ram)
+{
+    if (ram == NULL)
+        return;
+
+    for (addr_t i = 0; i < ram->bucket_count; ++i)
+    {
+        // free() is well defined on NULL pointers, so we don't need to check
+        // if ram->buckets[i] is a used page or NULL one.
+        free(ram->buckets[i].data);
+    }
+
+    free(ram->buckets);
+    free(ram);
 }
 
 word_t ram_get(ram_t *ram, addr_t addr)
