@@ -8,6 +8,10 @@
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Checks if the given @a ptr is not NULL. If it is, dumps an error message and abort. */
 void check_alloc(void* ptr);
 
@@ -43,5 +47,9 @@ rom_t rom_from_file(const char* filename);
 void rom_destroy(rom_t rom);
 /** Gets the word at the given @a addr of the given @a rom block. */
 static inline word_t rom_get(rom_t rom, addr_t addr) { return rom.data[addr]; }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !CPULM_MEMORY_MAPPING_H
