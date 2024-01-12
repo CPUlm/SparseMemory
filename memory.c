@@ -126,7 +126,7 @@ struct ram_t {
   addr_t bucket_count;
   addr_t page_count;
 
-  // Size, in bytes, of a RAM's page size.
+  // Size, in words, of a RAM's page size.
   addr_t page_size;
 };
 
@@ -171,7 +171,7 @@ static addr_t ht_find(ram_page_t *buckets, addr_t bucket_count,
 
 static void init_ram_page(ram_t *ram, ram_page_t *page, addr_t base_addr) {
   page->base_addr = base_addr;
-  page->data = (word_t *)malloc(ram->page_size);
+  page->data = (word_t *)calloc(sizeof(word_t), ram->page_size);
   check_alloc(page->data);
 }
 
@@ -180,14 +180,14 @@ ram_t *ram_create() {
   check_alloc(ram);
 
   // Precompute the RAM's page size.
-  ram->page_size = get_os_memory_page();
+  ram->page_size = get_os_memory_page() / sizeof(word_t);
 
   ram->buckets = (ram_page_t *)calloc(INITIAL_RAM_HT_SIZE, sizeof(ram_page_t));
   check_alloc(ram->buckets);
   ram->bucket_count = INITIAL_RAM_HT_SIZE;
   ram->page_count = 1;
 
-  // Initialize the first memory's page (the region [0..PAGE_SIZE]).
+  // Initialize the first memory's page (the region [0..PAGE_SIZE)).
   init_ram_page(ram, &ram->buckets[ht_find(ram->buckets, ram->bucket_count, 0)],
                 0);
 
@@ -216,7 +216,7 @@ static ram_page_t *get_ram_page(ram_t *ram, addr_t addr) {
     addr_t old_bucket_count = ram->bucket_count;
     ram->bucket_count *= 2;
     ram_page_t *new_pages =
-        (ram_page_t *)malloc(sizeof(ram_page_t) * ram->bucket_count);
+        (ram_page_t *)calloc(ram->bucket_count, sizeof(ram_page_t));
     check_alloc(new_pages);
 
     // Rehash the table (we just reinsert individually each of the previous
