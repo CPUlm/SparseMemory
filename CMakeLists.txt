@@ -7,3 +7,6 @@ add_library(SparseMemory
     memory.h)
 
 target_include_directories(SparseMemory PUBLIC .)
+
+enable_testing()
+add_subdirectory(test)
