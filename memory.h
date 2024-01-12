@@ -41,6 +41,30 @@ void ram_set(ram_t *ram, addr_t addr, word_t value);
 /** Same as ram_get() then ram_set(), but faster. */
 word_t ram_get_set(ram_t *ram, addr_t addr, word_t value);
 
+#ifndef RAM_NO_READ_LISTENER
+typedef void (*ram_read_listener_fn_t)(addr_t);
+/** Installs a RAM read listener for the memory range [@a addr_low,@a
+ * addr_high].
+ *
+ * The function @a callback will be called just before each RAM reads to the
+ * memory region [@a addr_low,@a addr_high]. The read address is given as an
+ * argument to @a callback. */
+void ram_install_read_listener(ram_t *ram, addr_t addr_low, addr_t addr_high,
+                               ram_read_listener_fn_t callback);
+#endif // !RAM_NO_READ_LISTENER
+
+#ifndef RAM_NO_WRITE_LISTENER
+typedef void (*ram_write_listener_fn_t)(addr_t, word_t);
+/** Installs a RAM write listener for the memory range [@a addr_low,@a
+ * addr_high].
+ *
+ * The function @a callback will be called just after each RAM writes to the
+ * memory region [@a addr_low,@a addr_high]. The write address and the write
+ * value are given as arguments to @a callback. */
+void ram_install_write_listener(ram_t *ram, addr_t addr_low, addr_t addr_high,
+                                ram_write_listener_fn_t callback);
+#endif // !RAM_NO_WRITE_LISTENER
+
 /*
  * ROM abstraction.
  */

@@ -52,3 +52,134 @@ TEST(RamTest, many_access) {
 
   ram_destroy(ram);
 }
+
+#ifndef RAM_NO_READ_LISTENER
+bool read_listener_1_was_called = false;
+bool read_listener_2_was_called = false;
+bool read_listener_3_was_called = false;
+
+TEST(RamTest, read_listener) {
+  ram_t *ram = ram_create();
+  ASSERT_NE(ram, nullptr);
+
+  ram_install_read_listener(ram, 156, 89965,
+                            [](auto) { read_listener_1_was_called = true; });
+
+  ram_install_read_listener(ram, 9532, 89965,
+                            [](auto) { read_listener_2_was_called = true; });
+
+  ram_install_read_listener(ram, 50, 100, [](auto addr) {
+    EXPECT_EQ(addr, 67);
+    read_listener_3_was_called = true;
+  });
+
+  // Simple test
+  read_listener_1_was_called = false;
+  read_listener_2_was_called = false;
+  read_listener_3_was_called = false;
+  ram_get(ram, 8532);
+  EXPECT_TRUE(read_listener_1_was_called);
+  EXPECT_FALSE(read_listener_2_was_called);
+  EXPECT_FALSE(read_listener_3_was_called);
+
+  // Does it work for ram_get_set? Also, do multiple listeners with common
+  // regions be called?
+  read_listener_1_was_called = false;
+  read_listener_2_was_called = false;
+  read_listener_3_was_called = false;
+  ram_get_set(ram, 9999, 0);
+  EXPECT_TRUE(read_listener_1_was_called);
+  EXPECT_TRUE(read_listener_2_was_called);
+  EXPECT_FALSE(read_listener_3_was_called);
+
+  // Check if it is the correct address that is given to the callback
+  read_listener_1_was_called = false;
+  read_listener_2_was_called = false;
+  read_listener_3_was_called = false;
+  ram_get(ram, 67);
+  EXPECT_FALSE(read_listener_1_was_called);
+  EXPECT_FALSE(read_listener_2_was_called);
+  EXPECT_TRUE(read_listener_3_was_called);
+
+  // Out of bounds accesses do not trigger the listener
+  read_listener_1_was_called = false;
+  read_listener_2_was_called = false;
+  read_listener_3_was_called = false;
+  ram_get(ram, 5);
+  EXPECT_FALSE(read_listener_1_was_called);
+  EXPECT_FALSE(read_listener_2_was_called);
+  EXPECT_FALSE(read_listener_3_was_called);
+  ram_get(ram, 1289965);
+  EXPECT_FALSE(read_listener_1_was_called);
+  EXPECT_FALSE(read_listener_2_was_called);
+  EXPECT_FALSE(read_listener_3_was_called);
+
+  ram_destroy(ram);
+}
+#endif // !RAM_NO_READ_LISTENER
+
+#ifndef RAM_NO_WRITE_LISTENER
+bool write_listener_1_was_called = false;
+bool write_listener_2_was_called = false;
+bool write_listener_3_was_called = false;
+
+TEST(RamTest, write_listener) {
+  ram_t *ram = ram_create();
+  ASSERT_NE(ram, nullptr);
+
+  ram_install_write_listener(
+      ram, 156, 89965, [](auto, auto) { write_listener_1_was_called = true; });
+
+  ram_install_write_listener(
+      ram, 9532, 89965, [](auto, auto) { write_listener_2_was_called = true; });
+
+  ram_install_write_listener(ram, 50, 100, [](auto addr, auto value) {
+    EXPECT_EQ(addr, 67);
+    EXPECT_EQ(value, 146);
+    write_listener_3_was_called = true;
+  });
+
+  // Simple test
+  write_listener_1_was_called = false;
+  write_listener_2_was_called = false;
+  write_listener_3_was_called = false;
+  ram_set(ram, 8532, 0);
+  EXPECT_TRUE(write_listener_1_was_called);
+  EXPECT_FALSE(write_listener_2_was_called);
+  EXPECT_FALSE(write_listener_3_was_called);
+
+  // Does it work for ram_get_set? Also, do multiple listeners with common
+  // regions be called?
+  write_listener_1_was_called = false;
+  write_listener_2_was_called = false;
+  write_listener_3_was_called = false;
+  ram_get_set(ram, 9999, 0);
+  EXPECT_TRUE(write_listener_1_was_called);
+  EXPECT_TRUE(write_listener_2_was_called);
+  EXPECT_FALSE(write_listener_3_was_called);
+
+  // Check if it is the correct address that is given to the callback
+  write_listener_1_was_called = false;
+  write_listener_2_was_called = false;
+  write_listener_3_was_called = false;
+  ram_set(ram, 67, 146);
+  EXPECT_FALSE(write_listener_1_was_called);
+  EXPECT_FALSE(write_listener_2_was_called);
+  EXPECT_TRUE(write_listener_3_was_called);
+
+  // Out of bounds accesses do not trigger the listener
+  write_listener_1_was_called = false;
+  write_listener_2_was_called = false;
+  write_listener_3_was_called = false;
+  ram_set(ram, 5, 0);
+  EXPECT_FALSE(write_listener_1_was_called);
+  EXPECT_FALSE(write_listener_2_was_called);
+  EXPECT_FALSE(write_listener_3_was_called);
+  ram_set(ram, 1289965, 0);
+  EXPECT_FALSE(write_listener_1_was_called);
+  EXPECT_FALSE(write_listener_2_was_called);
+  EXPECT_FALSE(write_listener_3_was_called);
+
+  ram_destroy(ram);
+}
+#endif // !RAM_NO_WRITE_LISTENER

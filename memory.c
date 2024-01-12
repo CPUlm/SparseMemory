@@ -115,6 +115,22 @@ static size_t get_os_memory_page() {
 #endif
 }
 
+#ifndef RAM_NO_READ_LISTENER
+struct ram_read_listener_t {
+  ram_read_listener_fn_t callback;
+  struct ram_read_listener_t *next;
+  addr_t addr_low, addr_high;
+};
+#endif // !RAM_NO_READ_LISTENER
+
+#ifndef RAM_NO_WRITE_LISTENER
+struct ram_write_listener_t {
+  ram_write_listener_fn_t callback;
+  struct ram_write_listener_t *next;
+  addr_t addr_low, addr_high;
+};
+#endif // !RAM_NO_WRITE_LISTENER
+
 typedef struct ram_page_t {
   addr_t base_addr;
   word_t *data;
@@ -125,6 +141,13 @@ struct ram_t {
   // page_count must always be a power of 2.
   addr_t bucket_count;
   addr_t page_count;
+
+#ifndef RAM_NO_READ_LISTENER
+  struct ram_read_listener_t *read_listener;
+#endif // !RAM_NO_READ_LISTENER
+#ifndef RAM_NO_WRITE_LISTENER
+  struct ram_write_listener_t *write_listener;
+#endif // !RAM_NO_WRITE_LISTENER
 
   // Size, in words, of a RAM's page size.
   addr_t page_size;
@@ -178,6 +201,13 @@ static void init_ram_page(ram_t *ram, ram_page_t *page, addr_t base_addr) {
 ram_t *ram_create() {
   ram_t *ram = (ram_t *)malloc(sizeof(ram_t));
   check_alloc(ram);
+
+#ifndef RAM_NO_READ_LISTENER
+  ram->read_listener = NULL;
+#endif // !RAM_NO_READ_LISTENER
+#ifndef RAM_NO_WRITE_LISTENER
+  ram->write_listener = NULL;
+#endif // !RAM_NO_WRITE_LISTENER
 
   // Precompute the RAM's page size.
   ram->page_size = get_os_memory_page() / sizeof(word_t);
@@ -266,6 +296,26 @@ void ram_destroy(ram_t *ram) {
   if (ram == NULL)
     return;
 
+#ifndef RAM_NO_READ_LISTENER
+  // Free all read listeners.
+  struct ram_read_listener_t *read_it = ram->read_listener;
+  while (read_it != NULL) {
+    struct ram_read_listener_t *next = read_it->next;
+    free(read_it);
+    read_it = next;
+  }
+#endif // !RAM_NO_READ_LISTENER
+
+#ifndef RAM_NO_WRITE_LISTENER
+  // Free all write listeners.
+  struct ram_write_listener_t *write_it = ram->write_listener;
+  while (write_it != NULL) {
+    struct ram_write_listener_t *next = write_it->next;
+    free(write_it);
+    write_it = next;
+  }
+#endif // !RAM_NO_WRITE_LISTENER
+
   for (addr_t i = 0; i < ram->bucket_count; ++i) {
     // free() is well defined on NULL pointers, so we don't need to check
     // if ram->buckets[i] is a used page or NULL one.
@@ -276,23 +326,97 @@ void ram_destroy(ram_t *ram) {
   free(ram);
 }
 
+static void handle_read_listeners(ram_t *ram, addr_t addr) {
+#ifndef RAM_NO_READ_LISTENER
+  struct ram_read_listener_t *it = ram->read_listener;
+  while (it != NULL) {
+    if (addr >= it->addr_low && addr <= it->addr_high)
+      it->callback(addr);
+    it = it->next;
+  }
+#endif // !RAM_NO_READ_LISTENER
+}
+
+static void handle_write_listeners(ram_t *ram, addr_t addr, word_t new_word) {
+#ifndef RAM_NO_WRITE_LISTENER
+  struct ram_write_listener_t *it = ram->write_listener;
+  while (it != NULL) {
+    if (addr >= it->addr_low && addr <= it->addr_high)
+      it->callback(addr, new_word);
+    it = it->next;
+  }
+#endif // !RAM_NO_WRITE_LISTENER
+}
+
 word_t ram_get(ram_t *ram, addr_t addr) {
   ram_page_t *page = get_ram_page(ram, addr);
+  handle_read_listeners(ram, addr);
   return page->data[addr - page->base_addr];
 }
 
 void ram_set(ram_t *ram, addr_t addr, word_t value) {
   ram_page_t *page = get_ram_page(ram, addr);
   page->data[addr - page->base_addr] = value;
+  handle_write_listeners(ram, addr, value);
 }
 
 word_t ram_get_set(ram_t *ram, addr_t addr, word_t value) {
   ram_page_t *page = get_ram_page(ram, addr);
   addr_t in_page_addr = addr - page->base_addr;
+  handle_read_listeners(ram, addr);
   word_t old_value = page->data[in_page_addr];
   page->data[in_page_addr] = value;
+  handle_write_listeners(ram, addr, value);
   return old_value;
 }
+
+#ifndef RAM_NO_READ_LISTENER
+void ram_install_read_listener(ram_t *ram, addr_t addr_low, addr_t addr_high,
+                               ram_read_listener_fn_t callback) {
+  struct ram_read_listener_t *listener =
+      (struct ram_read_listener_t *)malloc(sizeof(struct ram_read_listener_t));
+  check_alloc(listener);
+
+  listener->callback = callback;
+  listener->next = NULL;
+  listener->addr_low = addr_low;
+  listener->addr_high = addr_high;
+
+  // Insert the listener to the RAM block.
+  if (ram->read_listener == NULL) {
+    ram->read_listener = listener;
+  } else {
+    struct ram_read_listener_t *it = ram->read_listener;
+    while (it->next != NULL)
+      it = it->next;
+    it->next = listener;
+  }
+}
+#endif // !RAM_NO_READ_LISTENER
+
+#ifndef RAM_NO_WRITE_LISTENER
+void ram_install_write_listener(ram_t *ram, addr_t addr_low, addr_t addr_high,
+                                ram_write_listener_fn_t callback) {
+  struct ram_write_listener_t *listener = (struct ram_write_listener_t *)malloc(
+      sizeof(struct ram_write_listener_t));
+  check_alloc(listener);
+
+  listener->callback = callback;
+  listener->next = NULL;
+  listener->addr_low = addr_low;
+  listener->addr_high = addr_high;
+
+  // Insert the listener to the RAM block.
+  if (ram->write_listener == NULL) {
+    ram->write_listener = listener;
+  } else {
+    struct ram_write_listener_t *it = ram->write_listener;
+    while (it->next != NULL)
+      it = it->next;
+    it->next = listener;
+  }
+}
+#endif // !RAM_NO_WRITE_LISTENER
 
 /*
  * ROM abstraction.
