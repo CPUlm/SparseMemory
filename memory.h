@@ -1,3 +1,7 @@
+// Copyright (c) 2024 Hubert Gruniaux
+// This file is part of SparseMemory which is released under the MIT license.
+// See file LICENSE.txt for full license details.
+
 #ifndef CPULM_MEMORY_MAPPING_H
 #define CPULM_MEMORY_MAPPING_H
 
