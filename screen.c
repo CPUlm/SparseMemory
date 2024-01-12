@@ -27,6 +27,13 @@ void screen_init() {
   printf(SCI "2J");   // clear screen
 }
 
+void screen_init_with_ram_mapping(ram_t *ram) {
+  assert(ram != NULL);
+  screen_init();
+  ram_install_write_listener(ram, SCREEN_BASE_ADDR,
+                             SCREEN_BASE_ADDR + SCREEN_SIZE, &screen_ram_write);
+}
+
 void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
   assert(x < SCREEN_WIDTH);
   assert(y < SCREEN_HEIGHT);
@@ -106,11 +113,11 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
   putchar(ch);
 }
 
-void screen_ram_write(addr_t base_addr, addr_t addr, word_t new_word) {
+void screen_ram_write(addr_t addr, word_t new_word) {
   // Check if addr is in the bounds.
-  assert(addr >= base_addr && addr < (base_addr + SCREEN_SIZE));
+  assert(addr >= SCREEN_BASE_ADDR && addr < (SCREEN_BASE_ADDR + SCREEN_SIZE));
 
-  const addr_t offset = addr - base_addr;
+  const addr_t offset = addr - SCREEN_BASE_ADDR;
   const addr_t x = offset % SCREEN_WIDTH;
   const addr_t y = offset / SCREEN_WIDTH;
   screen_put_character(x, y, new_word);
