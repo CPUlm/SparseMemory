@@ -271,13 +271,8 @@ static ram_page_t *get_ram_page(ram_t *ram, addr_t addr) {
   return &ram->buckets[index];
 }
 
-ram_t *ram_from_file(const char *filename) {
-  addr_t data_len = 0;
-  word_t *data = read_file(filename, &data_len);
-  if (data == NULL)
-    file_error(filename);
-
-  ram_t *ram = ram_create();
+void ram_init(ram_t* ram, const word_t *data, size_t data_len) {
+  assert(ram != NULL && data != NULL);
 
   addr_t base_address = 0;
   while (base_address < data_len) {
@@ -289,7 +284,16 @@ ram_t *ram_from_file(const char *filename) {
     memcpy(page->data, data + base_address, sizeof(word_t) * words_to_copy);
     base_address += ram->page_size;
   }
+}
 
+ram_t *ram_from_file(const char *filename) {
+  addr_t data_len = 0;
+  word_t *data = read_file(filename, &data_len);
+  if (data == NULL)
+    file_error(filename);
+
+  ram_t *ram = ram_create();
+  ram_init(ram, data, data_len);
   return ram;
 }
 

@@ -12,6 +12,25 @@ TEST(RamTest, ram_create) {
   ram_destroy(ram);
 }
 
+TEST(RamTest, ram_init) {
+  ram_t *ram = ram_create();
+  ASSERT_NE(ram, nullptr);
+
+  const word_t data[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+  ram_init(ram, data, 8);
+
+  EXPECT_EQ(ram_get(ram, 0), 1);
+  EXPECT_EQ(ram_get(ram, 1), 2);
+  EXPECT_EQ(ram_get(ram, 2), 3);
+  EXPECT_EQ(ram_get(ram, 3), 4);
+  EXPECT_EQ(ram_get(ram, 4), 5);
+  EXPECT_EQ(ram_get(ram, 5), 6);
+  EXPECT_EQ(ram_get(ram, 6), 7);
+  EXPECT_EQ(ram_get(ram, 7), 8);
+
+  ram_destroy(ram);
+}
+
 TEST(RamTest, low_address) {
   ram_t *ram = ram_create();
   ASSERT_NE(ram, nullptr);

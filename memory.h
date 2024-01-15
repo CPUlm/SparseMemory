@@ -29,6 +29,8 @@ typedef struct ram_t ram_t;
 
 /** Creates an infinite size RAM block. */
 ram_t *ram_create();
+/** Initializes the given RAM block with the given initial data. */
+void ram_init(ram_t* ram, const word_t *data, size_t data_len);
 /** Creates an infinite size RAM block first initialized with the data stored at
  * @a filename. */
 ram_t *ram_from_file(const char *filename);
