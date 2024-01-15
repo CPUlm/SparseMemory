@@ -34,6 +34,10 @@ void screen_init_with_ram_mapping(ram_t *ram) {
                              SCREEN_BASE_ADDR + SCREEN_SIZE, &screen_ram_write);
 }
 
+void screen_terminate() {
+  printf(SCI "?25h"); // show cursor
+}
+
 void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
   assert(x < SCREEN_WIDTH);
   assert(y < SCREEN_HEIGHT);

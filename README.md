@@ -43,6 +43,7 @@ rom_destroy(rom);
 The second API, for the screen, is defined in `screen.h` and include the following functions:
 
 - `screen_init()`: initialize the screen, must be called before any other screen function
+- `screen_terminate90`: terminate the screen
 - `screen_put_character()`: write a (styled) character to the screen at the given coordinates
 
 Screen example:
@@ -56,6 +57,8 @@ screen_put_character(1, 0, 'e');
 screen_put_character(2, 0, 'l' | (1 << 8));
 screen_put_character(3, 0, 'l' | (2 << 8));
 screen_put_character(4, 0, 'p');
+// Do not forget to call screen_terminate()!
+screen_terminate();
 ```
 
 You can combine both the RAM and screen API to provide a RAM-mapped screen:
@@ -70,6 +73,8 @@ ram_set(ram, SCREEN_BASE_ADDRESS + 1, 'e');
 // screen_put_character(1, 0, 'e') was called
 // And so on...
 
+// Do not forget:
+screen_terminate();
 ram_destroy(ram);
 ```
 
