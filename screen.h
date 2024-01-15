@@ -7,6 +7,10 @@
 
 #include "memory.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 // Try to keep the two following values as power of twos. If it is the case,
 // all divisions and modulos can be simplified.
 /** The width of the screen in characters. */
@@ -39,5 +43,9 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char);
  * the screen. This function implements the link between this mapped
  * memory region and the screen. */
 void screen_ram_write(addr_t addr, word_t new_word);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // !CPULM_SCREEN_H

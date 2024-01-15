@@ -14,7 +14,7 @@ typedef uint32_t addr_t;
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 /** Checks if the given @a ptr is not NULL.
  *
@@ -84,6 +84,6 @@ static inline word_t rom_get(rom_t rom, addr_t addr) { return rom.data[addr]; }
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 #endif // !CPULM_MEMORY_MAPPING_H
