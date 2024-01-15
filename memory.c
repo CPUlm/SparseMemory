@@ -31,6 +31,7 @@ static word_t *read_file(const char *filename, addr_t *data_len) {
   long file_size = ftell(file);
   if (file_size % sizeof(word_t) != 0)
     goto error; // the file does not contain word (of 4 bytes)
+  rewind(file);
 
   data = (word_t *)malloc(file_size);
   if (data == NULL)
