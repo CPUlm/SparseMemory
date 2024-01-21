@@ -31,8 +31,10 @@ void screen_init() {
 void screen_init_with_ram_mapping(ram_t* ram) {
     assert(ram != NULL);
     screen_init();
+    // End points are included so
+    // The interval is [SCREEN_BASE_ADDR; SCREEN_BASE_ADDR + SCREEN_SIZE - 1]
     ram_install_write_listener(ram, SCREEN_BASE_ADDR,
-        SCREEN_BASE_ADDR + SCREEN_SIZE, &screen_ram_write);
+        SCREEN_BASE_ADDR + SCREEN_SIZE - 1, &screen_ram_write);
 }
 
 void screen_terminate() {
