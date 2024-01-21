@@ -81,30 +81,37 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
         *it++ = ';';
 
         // Handle all style attributes
-        if (styled_char & STYLE_BOLD) {
+        if ((styled_char & STYLE_BOLD) != 0) {
             *it++ = '1';
             *it++ = ';';
-        } else if (styled_char & STYLE_FAINT) {
+        }
+        if ((styled_char & STYLE_FAINT) != 0) {
             *it++ = '2';
             *it++ = ';';
-        } else if (styled_char & STYLE_ITALIC) {
+        }
+        if ((styled_char & STYLE_ITALIC) != 0) {
             *it++ = '3';
             *it++ = ';';
-        } else if (styled_char & STYLE_UNDERLINE) {
+        }
+        if ((styled_char & STYLE_UNDERLINE) != 0) {
             *it++ = '4';
             *it++ = ';';
-        } else if (styled_char & STYLE_BLINKING) {
+        }
+        if ((styled_char & STYLE_BLINKING) != 0) {
             *it++ = '5'; // slow blinking, fast is not widely supported
             *it++ = ';';
-        } else if (styled_char & STYLE_HIDE) {
+        }
+        if ((styled_char & STYLE_HIDE) != 0) {
             // No widely supported
             *it++ = '8';
             *it++ = ';';
-        } else if (styled_char & STYLE_CROSSED) {
+        }
+        if ((styled_char & STYLE_CROSSED) != 0) {
             // No widely supported
             *it++ = '9';
             *it++ = ';';
-        } else if (styled_char & STYLE_OVERLINE) {
+        }
+        if ((styled_char & STYLE_OVERLINE) != 0) {
             // No widely supported
             *it++ = '5';
             *it++ = '3';
