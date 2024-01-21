@@ -57,24 +57,26 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
     // Because styling handling is heavy, we try to skip it if there is no style
     // specified.
     if (styled_char & (~0x7f)) {
-        word_t fg_color = ((styled_char >> 8) & 0xf); // 4-bits
-        word_t bg_color = ((styled_char >> 13) & 0xf); // 4-bits
-        // FIXME: because they are encoded in 4 bits, they can not be equal 16 (the
-        //        code for the default color)
+        word_t fg_color = ((styled_char >> 8) & 0x1f); // 5-bits
+        word_t bg_color = ((styled_char >> 13) & 0x1f); // 5-bits
 
-        if (fg_color <= 8) // normal colors
-            fg_color += 30;
-        else if (fg_color <= 15) // bright colors
-            fg_color = 90 + (fg_color - 8);
-        else if (fg_color == 16)
-            fg_color = 39; // default foreground color
+        if (fg_color == 0) // default foreground color
+            fg_color = 39;
+        else if (fg_color <= 9) // normal colors
+            fg_color = (fg_color - 1) + 30;
+        else if (fg_color <= 16) // bright colors
+            fg_color = 90 + (fg_color - 9);
+        else
+            assert(0 && "invalid fg color");
 
-        if (bg_color <= 8) // normal colors
-            bg_color += 40;
-        else if (bg_color <= 15) // bright colors
-            bg_color = 100 + (bg_color - 8);
-        else if (bg_color == 16)
-            bg_color = 49; // default background color
+        if (bg_color == 0) // default background color
+            bg_color = 49;
+        else if (bg_color <= 9) // normal colors
+            bg_color = (bg_color - 1) + 40;
+        else if (bg_color <= 16) // bright colors
+            bg_color = 100 + (bg_color - 9);
+        else
+            assert(0 && "invalid bg color");
 
         char style_buffer[32]; // should be large enough
         char* it = style_buffer;
