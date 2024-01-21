@@ -27,7 +27,7 @@ extern "C" {
 void screen_init();
 /** Same as screen_init() but also install a write listener into @a ram to
  * update the screen at each RAM write in the mapped screen memory. */
-void screen_init_with_ram_mapping(ram_t *ram);
+void screen_init_with_ram_mapping(ram_t* ram);
 /** Terminates the screen. Restore all default settings, etc. */
 void screen_terminate();
 /** Puts the given @a styled_char in the screen at the given @a x, @a y
