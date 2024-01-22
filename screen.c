@@ -25,6 +25,7 @@ enum style_flag_t {
 void screen_init() {
     printf(SCI "?25l"); // hide cursor
     printf(SCI "2J"); // clear screen
+    printf(SCI "17;1H"); // initial cursor position
     fflush(stdout);
 }
 
@@ -45,6 +46,8 @@ void screen_terminate() {
 void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
     assert(x < SCREEN_WIDTH);
     assert(y < SCREEN_HEIGHT);
+    // Save current cursor position
+    printf(SCI "s");
     // Cursor indices are 1-based, thus the +1.
     // The first argument is the row number, the second is the column number.
     printf(SCI "%u;%uH", y + 1, x + 1);
@@ -131,6 +134,9 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
 #ifndef DISABLE_SCREEN_STYLING
     printf(SCI "0m");
 #endif // !DISABLE_SCREEN_STYLING
+
+    // Restore cursor position
+    printf(SCI "u");
     fflush(stdout);
 }
 
