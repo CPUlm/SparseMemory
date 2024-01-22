@@ -128,6 +128,9 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
 #endif // !DISABLE_SCREEN_STYLING
 
     putchar(ch);
+#ifndef DISABLE_SCREEN_STYLING
+    printf(SCI "0m");
+#endif // !DISABLE_SCREEN_STYLING
     fflush(stdout);
 }
 
