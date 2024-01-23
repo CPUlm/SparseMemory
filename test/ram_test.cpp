@@ -82,12 +82,12 @@ TEST(RamTest, read_listener) {
   ASSERT_NE(ram, nullptr);
 
   ram_install_read_listener(ram, 156, 89965,
-                            [](auto) { read_listener_1_was_called = true; });
+                            [](auto, auto) { read_listener_1_was_called = true; });
 
   ram_install_read_listener(ram, 9532, 89965,
-                            [](auto) { read_listener_2_was_called = true; });
+                            [](auto, auto) { read_listener_2_was_called = true; });
 
-  ram_install_read_listener(ram, 50, 100, [](auto addr) {
+  ram_install_read_listener(ram, 50, 100, [](auto, auto addr) {
     EXPECT_EQ(addr, 67);
     read_listener_3_was_called = true;
   });
@@ -147,12 +147,12 @@ TEST(RamTest, write_listener) {
   ASSERT_NE(ram, nullptr);
 
   ram_install_write_listener(
-      ram, 156, 89965, [](auto, auto) { write_listener_1_was_called = true; });
+      ram, 156, 89965, [](auto, auto, auto) { write_listener_1_was_called = true; });
 
   ram_install_write_listener(
-      ram, 9532, 89965, [](auto, auto) { write_listener_2_was_called = true; });
+      ram, 9532, 89965, [](auto, auto, auto) { write_listener_2_was_called = true; });
 
-  ram_install_write_listener(ram, 50, 100, [](auto addr, auto value) {
+  ram_install_write_listener(ram, 50, 100, [](auto, auto addr, auto value) {
     EXPECT_EQ(addr, 67);
     EXPECT_EQ(value, 146);
     write_listener_3_was_called = true;
