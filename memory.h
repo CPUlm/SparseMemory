@@ -44,7 +44,7 @@ void ram_set(ram_t* ram, addr_t addr, word_t value);
 word_t ram_get_set(ram_t* ram, addr_t addr, word_t value);
 
 #ifndef RAM_NO_READ_LISTENER
-typedef void (*ram_read_listener_fn_t)(addr_t);
+typedef void (*ram_read_listener_fn_t)(ram_t*, addr_t);
 /** Installs a RAM read listener for the memory range [@a addr_low,@a
  * addr_high].
  *
@@ -58,7 +58,7 @@ void ram_install_read_debugger(ram_t* ram, int use_screen);
 #endif // !RAM_NO_READ_LISTENER
 
 #ifndef RAM_NO_WRITE_LISTENER
-typedef void (*ram_write_listener_fn_t)(addr_t, word_t);
+typedef void (*ram_write_listener_fn_t)(ram_t*, addr_t, word_t);
 /** Installs a RAM write listener for the memory range [@a addr_low,@a
  * addr_high].
  *

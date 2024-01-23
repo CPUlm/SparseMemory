@@ -10,7 +10,8 @@
 #define SCI "\x1b["
 
 #ifndef DISABLE_SCREEN_STYLING
-enum style_flag_t {
+enum style_flag_t
+{
     STYLE_BOLD = 1 << 18,
     STYLE_FAINT = 1 << 19,
     STYLE_ITALIC = 1 << 20,
@@ -22,28 +23,42 @@ enum style_flag_t {
 };
 #endif // !DISABLE_SCREEN_STYLING
 
-void screen_init() {
-    printf(SCI "?25l"); // hide cursor
-    printf(SCI "2J"); // clear screen
+/** If @a addr is inside the screen memory bounds (starting at @a
+ * SCREEN_BASE_ADDR) and @a new_word is the new memory's cell value written at
+ * @a addr, then update the screen with the given character.
+ *
+ * In practice, the screen access is done via a memory mapping. Some
+ * region of memory is "attached" to screen, each write to it update
+ * the screen. This function implements the link between this mapped
+ * memory region and the screen. */
+void screen_ram_write(ram_t *_, addr_t addr, word_t new_word);
+
+void screen_init()
+{
+    printf(SCI "?25l");  // hide cursor
+    printf(SCI "2J");    // clear screen
     printf(SCI "17;1H"); // initial cursor position
     fflush(stdout);
 }
 
-void screen_init_with_ram_mapping(ram_t* ram) {
+void screen_init_with_ram_mapping(ram_t *ram)
+{
     assert(ram != NULL);
     screen_init();
     // End points are included so
     // The interval is [SCREEN_BASE_ADDR; SCREEN_BASE_ADDR + SCREEN_SIZE - 1]
     ram_install_write_listener(ram, SCREEN_BASE_ADDR,
-        SCREEN_BASE_ADDR + SCREEN_SIZE - 1, &screen_ram_write);
+                               SCREEN_BASE_ADDR + SCREEN_SIZE - 1, &screen_ram_write);
 }
 
-void screen_terminate() {
+void screen_terminate()
+{
     printf(SCI "?25h"); // show cursor
     fflush(stdout);
 }
 
-void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
+void screen_put_character(addr_t x, addr_t y, word_t styled_char)
+{
     assert(x < SCREEN_WIDTH);
     assert(y < SCREEN_HEIGHT);
     // Save current cursor position
@@ -59,8 +74,9 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
     // Check if there is any styling, and if yes, then handle it.
     // Because styling handling is heavy, we try to skip it if there is no style
     // specified.
-    if (styled_char & (~0x7f)) {
-        word_t fg_color = ((styled_char >> 8) & 0x1f); // 5-bits
+    if (styled_char & (~0x7f))
+    {
+        word_t fg_color = ((styled_char >> 8) & 0x1f);  // 5-bits
         word_t bg_color = ((styled_char >> 13) & 0x1f); // 5-bits
 
         if (fg_color == 0) // default foreground color
@@ -82,41 +98,49 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
             assert(0 && "invalid bg color");
 
         char style_buffer[32]; // should be large enough
-        char* it = style_buffer;
+        char *it = style_buffer;
         *it++ = ';';
 
         // Handle all style attributes
-        if ((styled_char & STYLE_BOLD) != 0) {
+        if ((styled_char & STYLE_BOLD) != 0)
+        {
             *it++ = '1';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_FAINT) != 0) {
+        if ((styled_char & STYLE_FAINT) != 0)
+        {
             *it++ = '2';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_ITALIC) != 0) {
+        if ((styled_char & STYLE_ITALIC) != 0)
+        {
             *it++ = '3';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_UNDERLINE) != 0) {
+        if ((styled_char & STYLE_UNDERLINE) != 0)
+        {
             *it++ = '4';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_BLINKING) != 0) {
+        if ((styled_char & STYLE_BLINKING) != 0)
+        {
             *it++ = '5'; // slow blinking, fast is not widely supported
             *it++ = ';';
         }
-        if ((styled_char & STYLE_HIDE) != 0) {
+        if ((styled_char & STYLE_HIDE) != 0)
+        {
             // No widely supported
             *it++ = '8';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_CROSSED) != 0) {
+        if ((styled_char & STYLE_CROSSED) != 0)
+        {
             // No widely supported
             *it++ = '9';
             *it++ = ';';
         }
-        if ((styled_char & STYLE_OVERLINE) != 0) {
+        if ((styled_char & STYLE_OVERLINE) != 0)
+        {
             // No widely supported
             *it++ = '5';
             *it++ = '3';
@@ -140,7 +164,8 @@ void screen_put_character(addr_t x, addr_t y, word_t styled_char) {
     fflush(stdout);
 }
 
-void screen_ram_write(addr_t addr, word_t new_word) {
+void screen_ram_write(ram_t *_, addr_t addr, word_t new_word)
+{
     // Check if addr is in the bounds.
     assert(addr >= SCREEN_BASE_ADDR && addr < (SCREEN_BASE_ADDR + SCREEN_SIZE));
 
