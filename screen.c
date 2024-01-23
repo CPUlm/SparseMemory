@@ -33,6 +33,13 @@ enum style_flag_t
  * memory region and the screen. */
 void screen_ram_write(ram_t *_, addr_t addr, word_t new_word);
 
+static void ding_callback(ram_t * ram, addr_t addr, word_t new_word) {
+    if (addr == 1034 && new_word > 0) {
+        printf("\a");
+        ram_set(ram, 1034, 0);
+    }
+}
+
 void screen_init()
 {
     printf(SCI "?25l");  // hide cursor
@@ -49,6 +56,7 @@ void screen_init_with_ram_mapping(ram_t *ram)
     // The interval is [SCREEN_BASE_ADDR; SCREEN_BASE_ADDR + SCREEN_SIZE - 1]
     ram_install_write_listener(ram, SCREEN_BASE_ADDR,
                                SCREEN_BASE_ADDR + SCREEN_SIZE - 1, &screen_ram_write);
+    ram_install_write_listener(ram, 1034, 1034, &ding_callback);
 }
 
 void screen_terminate()
